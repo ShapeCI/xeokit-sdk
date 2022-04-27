@@ -110,7 +110,7 @@ class CameraUpdater {
 
             let dollyDeltaForDist = (updates.dollyDelta * dollyDistFactor);
             if (Math.abs(dollyDeltaForDist) > configs.dollyMaxSpeed) {
-                dollyDeltaForDist = dollyDeltaForDist > 0 ? dollyDeltaForDist : -1 * dollyDeltaForDist;
+                dollyDeltaForDist = dollyDeltaForDist > 0 ? configs.dollyMaxSpeed : -1 * configs.dollyMaxSpeed;
             }
 
             //----------------------------------------------------------------------------------------------------------
