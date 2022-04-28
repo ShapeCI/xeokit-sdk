@@ -1,13 +1,13 @@
-import {Plugin} from "../../viewer/Plugin.js";
-import {math} from "../../viewer/scene/math/math.js";
-import {Scene} from "../../viewer/scene/scene/Scene.js";
-import {DirLight} from "./../../viewer/scene/lights/DirLight.js";
-import {Mesh} from "./../../viewer/scene/mesh/Mesh.js";
-import {ReadableGeometry} from "../../viewer/scene/geometry/ReadableGeometry.js";
-import {PhongMaterial} from "../../viewer/scene/materials/PhongMaterial.js";
-import {Texture} from "../../viewer/scene/materials/Texture.js";
-import {buildCylinderGeometry} from "../../viewer/scene/geometry/builders/buildCylinderGeometry.js";
-import {CubeTextureCanvas} from "./CubeTextureCanvas.js";
+import { Plugin } from "../../viewer/Plugin.js";
+import { buildCylinderGeometry } from "../../viewer/scene/geometry/builders/buildCylinderGeometry.js";
+import { ReadableGeometry } from "../../viewer/scene/geometry/ReadableGeometry.js";
+import { PhongMaterial } from "../../viewer/scene/materials/PhongMaterial.js";
+import { Texture } from "../../viewer/scene/materials/Texture.js";
+import { math } from "../../viewer/scene/math/math.js";
+import { Scene } from "../../viewer/scene/scene/Scene.js";
+import { DirLight } from "./../../viewer/scene/lights/DirLight.js";
+import { Mesh } from "./../../viewer/scene/mesh/Mesh.js";
+import { CubeTextureCanvas } from "./CubeTextureCanvas.js";
 
 /**
  * {@link Viewer} plugin that lets us look at the entire {@link Scene} from along a chosen axis or diagonal.
@@ -96,7 +96,8 @@ class NavCubePlugin extends Plugin {
      * @param {Boolean} [cfg.synchProjection=false] Sets whether the NavCube switches between perspective and orthographic projections in synchrony with the {@link Camera}. When ````false````, the NavCube will always be rendered with perspective projection.
      */
     constructor(viewer, cfg = {}) {
-
+        // TODO: Change var to let
+        console.log("Nav cube created")
         super("NavCube", viewer, cfg);
 
         viewer.navCube = this;
@@ -684,4 +685,5 @@ class NavCubePlugin extends Plugin {
     }
 }
 
-export {NavCubePlugin};
+export { NavCubePlugin };
+
