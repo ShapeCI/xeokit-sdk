@@ -1,4 +1,4 @@
-import {math} from "../../math/math.js";
+import { math } from "../../math/math.js";
 
 const SCALE_DOLLY_EACH_FRAME = 1; // Recalculate dolly speed for eye->target distance on each Nth frame
 const EPSILON = 0.001;
@@ -12,7 +12,6 @@ const tempVec3 = math.vec3();
 class CameraUpdater {
 
     constructor(scene, controllers, configs, states, updates) {
-
         this._scene = scene;
         const camera = scene.camera;
         const pickController = controllers.pickController;
@@ -37,6 +36,10 @@ class CameraUpdater {
 
             if (Math.abs(updates.dollyDelta) < EPSILON) {
                 updates.dollyDelta = 0;
+            }
+
+            if (Math.abs(updates.dollyDelta) > configs.dollyMaxSpeed) {
+                updates.dollyDelta = updates.dollyDelta > 0 ? configs.dollyMaxSpeed : -1 * configs.dollyMaxSpeed;
             }
 
             //----------------------------------------------------------------------------------------------------------
@@ -105,7 +108,10 @@ class CameraUpdater {
                 }
             }
 
-            const dollyDeltaForDist = (updates.dollyDelta * dollyDistFactor);
+            let dollyDeltaForDist = (updates.dollyDelta * dollyDistFactor);
+            if (Math.abs(dollyDeltaForDist) > configs.dollyMaxSpeed) {
+                dollyDeltaForDist = dollyDeltaForDist > 0 ? configs.dollyMaxSpeed : -1 * configs.dollyMaxSpeed;
+            }
 
             //----------------------------------------------------------------------------------------------------------
             // Rotation
@@ -309,4 +315,4 @@ class CameraUpdater {
     }
 }
 
-export {CameraUpdater};
+export { CameraUpdater };
