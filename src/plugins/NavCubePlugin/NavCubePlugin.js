@@ -96,10 +96,7 @@ class NavCubePlugin extends Plugin {
      * @param {Boolean} [cfg.synchProjection=false] Sets whether the NavCube switches between perspective and orthographic projections in synchrony with the {@link Camera}. When ````false````, the NavCube will always be rendered with perspective projection.
      */
     constructor(viewer, cfg = {}) {
-        // TODO: Change var to let
-        console.log("Nav cube created")
         super("NavCube", viewer, cfg);
-
         viewer.navCube = this;
 
         var visible = true;
@@ -281,10 +278,11 @@ class NavCubePlugin extends Plugin {
                 var totalOffsetLeft = 0;
                 var totalOffsetTop = 0;
                 while (element.offsetParent) {
-                    totalOffsetLeft += element.offsetLeft;
-                    totalOffsetTop += element.offsetTop;
+                    totalOffsetLeft += (element.offsetLeft - element.scrollLeft);
+                    totalOffsetTop += (element.offsetTop - element.scrollTop);
                     element = element.offsetParent;
                 }
+
                 coords[0] = event.pageX - totalOffsetLeft;
                 coords[1] = event.pageY - totalOffsetTop;
             }
@@ -337,6 +335,9 @@ class NavCubePlugin extends Plugin {
             });
 
             document.addEventListener("mouseup", self._onMouseUp = function (e) {
+                if (!over)
+                    return
+
                 if (e.which !== 1) {// Left button
                     return;
                 }
@@ -395,14 +396,16 @@ class NavCubePlugin extends Plugin {
             });
 
             document.addEventListener("mousemove", self._onMouseMove = function (e) {
-                if (lastAreaId >= 0) {
+                if (over && lastAreaId >= 0) {
                     self._cubeTextureCanvas.setAreaHighlighted(lastAreaId, false);
                     self._repaint();
                     lastAreaId = -1;
                 }
+
                 if (e.buttons === 1 && !down) {
                     return;
                 }
+
                 if (down) {
                     var posX = e.clientX;
                     var posY = e.clientY;
@@ -410,14 +413,17 @@ class NavCubePlugin extends Plugin {
                     actionMove(posX, posY);
                     return;
                 }
+
                 if (!over) {
                     return;
                 }
+
                 var canvasPos = getCoordsWithinElement(e);
                 var hit = navCubeScene.pick({
                     canvasPos: canvasPos,
                     pickSurface: true
                 });
+
                 if (hit) {
                     if (hit.uv) {
                         document.body.style.cursor = "pointer";
