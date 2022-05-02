@@ -1,13 +1,13 @@
-import {Plugin} from "../../viewer/Plugin.js";
-import {math} from "../../viewer/scene/math/math.js";
-import {Scene} from "../../viewer/scene/scene/Scene.js";
-import {DirLight} from "./../../viewer/scene/lights/DirLight.js";
-import {Mesh} from "./../../viewer/scene/mesh/Mesh.js";
-import {ReadableGeometry} from "../../viewer/scene/geometry/ReadableGeometry.js";
-import {PhongMaterial} from "../../viewer/scene/materials/PhongMaterial.js";
-import {Texture} from "../../viewer/scene/materials/Texture.js";
-import {buildCylinderGeometry} from "../../viewer/scene/geometry/builders/buildCylinderGeometry.js";
-import {CubeTextureCanvas} from "./CubeTextureCanvas.js";
+import { Plugin } from "../../viewer/Plugin.js";
+import { buildCylinderGeometry } from "../../viewer/scene/geometry/builders/buildCylinderGeometry.js";
+import { ReadableGeometry } from "../../viewer/scene/geometry/ReadableGeometry.js";
+import { PhongMaterial } from "../../viewer/scene/materials/PhongMaterial.js";
+import { Texture } from "../../viewer/scene/materials/Texture.js";
+import { math } from "../../viewer/scene/math/math.js";
+import { Scene } from "../../viewer/scene/scene/Scene.js";
+import { DirLight } from "./../../viewer/scene/lights/DirLight.js";
+import { Mesh } from "./../../viewer/scene/mesh/Mesh.js";
+import { CubeTextureCanvas } from "./CubeTextureCanvas.js";
 
 /**
  * {@link Viewer} plugin that lets us look at the entire {@link Scene} from along a chosen axis or diagonal.
@@ -96,9 +96,7 @@ class NavCubePlugin extends Plugin {
      * @param {Boolean} [cfg.synchProjection=false] Sets whether the NavCube switches between perspective and orthographic projections in synchrony with the {@link Camera}. When ````false````, the NavCube will always be rendered with perspective projection.
      */
     constructor(viewer, cfg = {}) {
-
         super("NavCube", viewer, cfg);
-
         viewer.navCube = this;
 
         var visible = true;
@@ -280,10 +278,11 @@ class NavCubePlugin extends Plugin {
                 var totalOffsetLeft = 0;
                 var totalOffsetTop = 0;
                 while (element.offsetParent) {
-                    totalOffsetLeft += element.offsetLeft;
-                    totalOffsetTop += element.offsetTop;
+                    totalOffsetLeft += (element.offsetLeft - element.scrollLeft);
+                    totalOffsetTop += (element.offsetTop - element.scrollTop);
                     element = element.offsetParent;
                 }
+
                 coords[0] = event.pageX - totalOffsetLeft;
                 coords[1] = event.pageY - totalOffsetTop;
             }
@@ -336,6 +335,9 @@ class NavCubePlugin extends Plugin {
             });
 
             document.addEventListener("mouseup", self._onMouseUp = function (e) {
+                if (!over)
+                    return
+
                 if (e.which !== 1) {// Left button
                     return;
                 }
@@ -394,14 +396,16 @@ class NavCubePlugin extends Plugin {
             });
 
             document.addEventListener("mousemove", self._onMouseMove = function (e) {
-                if (lastAreaId >= 0) {
+                if (over && lastAreaId >= 0) {
                     self._cubeTextureCanvas.setAreaHighlighted(lastAreaId, false);
                     self._repaint();
                     lastAreaId = -1;
                 }
+
                 if (e.buttons === 1 && !down) {
                     return;
                 }
+
                 if (down) {
                     var posX = e.clientX;
                     var posY = e.clientY;
@@ -409,14 +413,17 @@ class NavCubePlugin extends Plugin {
                     actionMove(posX, posY);
                     return;
                 }
+
                 if (!over) {
                     return;
                 }
+
                 var canvasPos = getCoordsWithinElement(e);
                 var hit = navCubeScene.pick({
                     canvasPos: canvasPos,
                     pickSurface: true
                 });
+
                 if (hit) {
                     if (hit.uv) {
                         document.body.style.cursor = "pointer";
@@ -684,4 +691,5 @@ class NavCubePlugin extends Plugin {
     }
 }
 
-export {NavCubePlugin};
+export { NavCubePlugin };
+
