@@ -84,7 +84,7 @@ class Canvas extends Component {
         this.contextAttr.alpha = this.transparent;
 
         this.contextAttr.preserveDrawingBuffer = !!this.contextAttr.preserveDrawingBuffer;
-        this.contextAttr.stencil = false;
+        this.contextAttr.stencil = true;
         this.contextAttr.premultipliedAlpha = (!!this.contextAttr.premultipliedAlpha);  // False by default: https://github.com/xeokit/xeokit-sdk/issues/251
         this.contextAttr.antialias = (this.contextAttr.antialias !== false);
 
@@ -439,7 +439,8 @@ class Canvas extends Component {
     _initWebGL() {
 
         // Default context attribute values
-
+        console.log("hit initWebGL");
+        console.log(this.contextAttr);
         if (!this.gl) {
             for (let i = 0; !this.gl && i < WEBGL_CONTEXT_NAMES.length; i++) {
                 try {

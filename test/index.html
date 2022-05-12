@@ -52,20 +52,31 @@
     viewer.camera.look = [-19.333333684947643, 4.5247180344748195, -102.69592288322313]
     viewer.camera.up = [-0.04336858835457652, 0.9783520009990986, -0.20235248376333503]
 
-    const webIFCLoader = new WebIFCLoaderPlugin(viewer, {
+    // const webIFCLoader = new WebIFCLoaderPlugin(viewer, {
+    //     wasmPath: "https://cdn.jsdelivr.net/npm/@xeokit/xeokit-sdk/dist/"
+    // });
+
+    // // const webIFCLoader = new XKTLoaderPlugin(viewer, {});
+
+    // const model = webIFCLoader.load({
+    //     // src: "/car.xkt",
+    //     src: "https://raw.githubusercontent.com/tomvandig/web-ifc/main/examples/example.ifc",
+    //     // edges: true
+    // });
+
+    const xktLoader = new XKTLoaderPlugin(viewer, {
         wasmPath: "https://cdn.jsdelivr.net/npm/@xeokit/xeokit-sdk/dist/"
     });
 
-    // const webIFCLoader = new XKTLoaderPlugin(viewer, {});
-
-    const model = webIFCLoader.load({
-        // src: "/car.xkt",
-        src: "https://raw.githubusercontent.com/tomvandig/web-ifc/main/examples/example.ifc",
+    const model = xktLoader.load({
+        src: "/castor-asm.xkt",
+        scale: [20, 20, 20],
+        // src: "https://raw.githubusercontent.com/tomvandig/web-ifc/main/examples/example.ifc",
         // edges: true
     });
 
     model.on("loaded", () => {
-        // viewer.cameraFlight.flyTo(model)
+        viewer.cameraFlight.flyTo(model)
     })
 
 </script>

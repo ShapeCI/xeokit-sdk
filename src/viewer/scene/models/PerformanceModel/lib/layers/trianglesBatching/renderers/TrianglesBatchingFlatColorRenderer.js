@@ -1,9 +1,11 @@
+import { postProcessGLTF } from "@loaders.gl/gltf";
 import { math } from "../../../../../../math/math.js";
 import { createRTCViewMat, getPlaneRTCPos } from "../../../../../../math/rtcCoords.js";
 import { Program } from "../../../../../../webgl/Program.js";
 
 const tempVec4 = math.vec4();
 const tempVec3a = math.vec3();
+var first = true;
 
 /**
  * @private
@@ -27,7 +29,6 @@ class TrianglesBatchingFlatColorRenderer {
     }
 
     drawLayer(frameCtx, batchingLayer, renderPass) {
-
         const scene = this._scene;
         const camera = scene.camera;
         const model = batchingLayer.model;
@@ -97,7 +98,90 @@ class TrianglesBatchingFlatColorRenderer {
 
         state.indicesBuf.bind();
 
-        gl.drawElements(gl.TRIANGLES, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
+        if (numSectionPlanes > 0) {
+            // we're going to use the stencil buffer for all three passes
+            gl.enable(gl.STENCIL_TEST);
+            gl.clear(gl.STENCIL_BUFFER_BIT);
+
+            ////////     FIRST PASS     ////////////////////
+            
+            // draw back faces and increment stencil buffer for each fragment drawn
+            gl.enable(gl.CULL_FACE);
+            gl.cullFace(gl.FRONT);
+            // stencil test should always pass, reference value set to 1, mask doesn't affect stencil
+            gl.stencilFunc(
+                gl.ALWAYS,    // the test
+                1,            // reference value
+                0xFF,         // mask
+            );
+            // set stencil op to increment
+            gl.stencilOp(
+                gl.KEEP,     // what to do if the stencil test fails
+                gl.KEEP,     // what to do if the depth test fails
+                gl.INCR,  // what to do if both tests pass
+            );
+            gl.drawElements(gl.TRIANGLES, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
+
+
+            //////////     SECOND PASS     ////////////////////
+
+            // draw front faces and decrement stencil buffer for each fragment drawn
+            gl.cullFace(gl.BACK);
+            // stencil func should still always pass
+            // set stencil op to decrement
+            gl.stencilOp(
+                gl.KEEP,     // what to do if the stencil test fails
+                gl.KEEP,     // what to do if the depth test fails
+                gl.DECR,  // what to do if both tests pass
+            );
+            gl.drawElements(gl.TRIANGLES, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
+            gl.disable(gl.CULL_FACE);
+
+            ////////     THIRD PASS     ////////////////////
+
+            // draw the full screen rectangle, but only fragments where stencil buffer is positive
+            gl.stencilOp(
+                gl.KEEP,
+                gl.KEEP,
+                gl.KEEP
+            );
+            gl.stencilFunc(
+                gl.EQUAL,    // the test
+                1,            // reference value
+                0xFF,         // mask
+            );
+
+            // this._bindCapsProgram();
+            // if (first) {
+            //     first = false;
+            //     console.log("VAO handle: ");
+            //     console.log(this._rectVAO);
+            //     console.log(gl.getContextAttributes());
+            // }
+
+            // gl.bindVertexArray(this._rectVAO);
+            // gl.bindBuffer(gl.ARRAY_BUFFER, this._rectPositionBuffer);
+            // // populate the VBO
+            // const vertices = [
+            //     -1.0,  1.0, -1.0,   // z=-1.0 is the near plane, I guess?
+            //     -1.0, -1.0, -1.0,
+            //      1.0, -1.0, -1.0,
+            //      1.0, -1.0, -1.0,
+            //      1.0,  1.0, -1.0,
+            //     -1.0,  1.0, -1.0
+            // ];
+
+            // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+            // gl.vertexAttribPointer(this._aRectPosition.location, 3, gl.FLOAT, false, 0, 0);  
+            // gl.drawArrays(gl.TRIANGLES, 0, 6);
+            
+            //  CLEANUP
+            gl.disable(gl.STENCIL_TEST);
+        }
+        else {
+            // no cross-section planes so just do a single pass.
+            gl.drawElements(gl.TRIANGLES, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
+        }
     }
 
     _allocate() {
@@ -177,6 +261,50 @@ class TrianglesBatchingFlatColorRenderer {
         if (scene.logarithmicDepthBufferEnabled) {
             this._uLogDepthBufFC = program.getLocation("logDepthBufFC");
         }
+
+
+        /////////////    CLIPPING CAPS   //////////////////
+        this._rectProgram = new Program(gl, this._buildCapsShader());
+
+        if (this._rectProgram.errors) {
+            this.errors = this._rectProgram.errors;
+            return;
+        }
+
+        this._uRectColor = this._rectProgram.getLocation("color");
+        this._aRectPosition = this._rectProgram.getAttribute("position");
+        gl.enableVertexAttribArray(this._aRectPosition.location);
+
+        // Create the VAO
+        this._rectVAO = gl.createVertexArray();
+        gl.bindVertexArray(this._rectVAO);
+
+        // create the VBO
+        this._rectPositionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._rectPositionBuffer);
+        
+        // populate the VBO
+        const vertices = [
+            -1.0, 1.0, 0.0,
+            -1.0, -1.0, 0.0,
+            1.0, -1.0, 0.0,
+
+            1.0, -1.0, 0.0,
+            1.0, 1.0, 0.0,
+            -1.0, 1.0, 0.0
+        ];
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        gl.vertexAttribPointer(this._aRectPosition.location, 3, gl.FLOAT, false, 0, 0);        
+
+    }
+
+    _bindCapsProgram() {
+        const gl = this._scene.canvas.gl;
+
+        this._rectProgram.bind();
+        // setting all caps to a constant red.
+        gl.uniform4fv(this._uRectColor, [1.0, 0.0, 0.0, 0.8]);
     }
 
     _bindProgram(frameCtx) {
@@ -233,6 +361,54 @@ class TrianglesBatchingFlatColorRenderer {
             gl.uniform1f(this._uLogDepthBufFC, logDepthBufFC);
         }
     }
+
+    _buildCapsShader() {
+        return {
+            vertex: this._buildCapsVertexShader(),
+            fragment: this._buildCapsFragmentShader()
+        };
+    }
+
+    _buildCapsVertexShader() {
+        const src = [];
+        src.push("#version 300 es");
+        src.push("// Triangles batching flat-shading draw vertex shader - Screen Space Rectangle for Clipping Caps");
+
+        src.push("uniform int renderPass;");
+
+        src.push("in vec3 position;");
+
+        src.push("void main(void) {");
+            src.push("gl_Position = vec4(position, 1.0);");
+        src.push("}");
+
+        return src;
+    }
+
+    _buildCapsFragmentShader() {
+        const src = [];
+        src.push("#version 300 es");
+        src.push("// Triangles batching flat-shading draw fragment shader - Screen Space Rectangle for Clipping Caps");
+        
+        src.push("#ifdef GL_FRAGMENT_PRECISION_HIGH");
+        src.push("precision highp float;");
+        src.push("precision highp int;");
+        src.push("#else");
+        src.push("precision mediump float;");
+        src.push("precision mediump int;");
+        src.push("#endif");
+
+        src.push("uniform vec4 color;");
+
+        src.push("out vec4 outColor;");
+
+        src.push("void main(void) {");
+            src.push("outColor = color;");
+        src.push("}");
+
+        return src;
+    }
+
 
     _buildShader() {
         return {
