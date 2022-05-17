@@ -1,15 +1,15 @@
-import {math} from "../../viewer/scene/math/math.js";
+import { buildCylinderGeometry } from "../../viewer/scene/geometry/builders/buildCylinderGeometry.js";
+import { buildSphereGeometry } from "../../viewer/scene/geometry/builders/buildSphereGeometry.js";
+import { buildTorusGeometry } from "../../viewer/scene/geometry/builders/buildTorusGeometry.js";
+import { ReadableGeometry } from "../../viewer/scene/geometry/ReadableGeometry.js";
+import { EmphasisMaterial } from "../../viewer/scene/materials/EmphasisMaterial.js";
+import { PhongMaterial } from "../../viewer/scene/materials/PhongMaterial.js";
+import { math } from "../../viewer/scene/math/math.js";
+import { worldToRTCPos } from "../../viewer/scene/math/rtcCoords.js";
+import { Mesh } from "../../viewer/scene/mesh/Mesh.js";
+import { Node } from "../../viewer/scene/nodes/Node.js";
 
-import {buildCylinderGeometry} from "../../viewer/scene/geometry/builders/buildCylinderGeometry.js";
-import {buildTorusGeometry} from "../../viewer/scene/geometry/builders/buildTorusGeometry.js";
 
-import {ReadableGeometry} from "../../viewer/scene/geometry/ReadableGeometry.js";
-import {PhongMaterial} from "../../viewer/scene/materials/PhongMaterial.js";
-import {EmphasisMaterial} from "../../viewer/scene/materials/EmphasisMaterial.js";
-import {Node} from "../../viewer/scene/nodes/Node.js";
-import {Mesh} from "../../viewer/scene/mesh/Mesh.js";
-import {buildSphereGeometry} from "../../viewer/scene/geometry/builders/buildSphereGeometry.js";
-import {worldToRTCPos} from "../../viewer/scene/math/rtcCoords.js";
 
 const zeroVec = new Float64Array([0, 0, 1]);
 const quat = new Float64Array(4);
@@ -971,8 +971,8 @@ class Control {
                     var totalOffsetTop = 0;
 
                     while (element.offsetParent) {
-                        totalOffsetLeft += element.offsetLeft;
-                        totalOffsetTop += element.offsetTop;
+                        totalOffsetLeft += (element.offsetLeft - element.scrollLeft);
+                        totalOffsetTop += (element.offsetTop - element.scrollTop);
                         element = element.offsetParent;
                     }
                     canvasPos[0] = event.pageX - totalOffsetLeft;
@@ -1325,4 +1325,4 @@ class Control {
     }
 }
 
-export {Control};
+export { Control };

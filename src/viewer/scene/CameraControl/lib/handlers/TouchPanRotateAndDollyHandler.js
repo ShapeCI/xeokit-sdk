@@ -1,4 +1,4 @@
-import {math} from "../../../math/math.js";
+import { math } from "../../../math/math.js";
 
 const getCanvasPosFromEvent = function (event, canvasPos) {
     if (!event) {
@@ -10,8 +10,8 @@ const getCanvasPosFromEvent = function (event, canvasPos) {
         let totalOffsetLeft = 0;
         let totalOffsetTop = 0;
         while (element.offsetParent) {
-            totalOffsetLeft += element.offsetLeft;
-            totalOffsetTop += element.offsetTop;
+            totalOffsetLeft += (element.offsetLeft - element.scrollLeft);
+            totalOffsetTop += (element.offsetTop - element.scrollTop);
             element = element.offsetParent;
         }
         canvasPos[0] = event.pageX - totalOffsetLeft;
@@ -259,4 +259,5 @@ class TouchPanRotateAndDollyHandler {
     }
 }
 
-export {TouchPanRotateAndDollyHandler};
+export { TouchPanRotateAndDollyHandler };
+

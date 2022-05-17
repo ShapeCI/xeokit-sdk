@@ -1,6 +1,6 @@
-import {Dot} from "../lib/html/Dot.js";
-import {Component} from "../../viewer/scene/Component.js";
-import {math} from "../../viewer/scene/math/math.js";
+import { Component } from "../../viewer/scene/Component.js";
+import { math } from "../../viewer/scene/math/math.js";
+import { Dot } from "../lib/html/Dot.js";
 
 /**
  * Creates {@link DistanceMeasurement}s from mouse and touch input.
@@ -334,8 +334,8 @@ const getCanvasPosFromEvent = function (event, canvasPos) {
         let totalOffsetLeft = 0;
         let totalOffsetTop = 0;
         while (element.offsetParent) {
-            totalOffsetLeft += element.offsetLeft;
-            totalOffsetTop += element.offsetTop;
+            totalOffsetLeft += (element.offsetLeft - element.scrollLeft);
+            totalOffsetTop += (element.offsetTop - element.scrollTop);
             element = element.offsetParent;
         }
         canvasPos[0] = event.pageX - totalOffsetLeft;
@@ -344,4 +344,4 @@ const getCanvasPosFromEvent = function (event, canvasPos) {
     return canvasPos;
 };
 
-export {DistanceMeasurementsControl};
+export { DistanceMeasurementsControl };

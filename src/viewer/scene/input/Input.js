@@ -1,5 +1,5 @@
-import {Component} from '../Component.js';
-import {math} from '../math/math.js';
+import { Component } from '../Component.js';
+import { math } from '../math/math.js';
 
 /**
  * @desc Meditates mouse, touch and keyboard events for various interaction controls.
@@ -1254,8 +1254,8 @@ class Input extends Component {
             let totalOffsetLeft = 0;
             let totalOffsetTop = 0;
             while (element.offsetParent) {
-                totalOffsetLeft += element.offsetLeft;
-                totalOffsetTop += element.offsetTop;
+                totalOffsetLeft += (element.offsetLeft - element.scrollLeft);
+                totalOffsetTop += (element.offsetTop - element.scrollTop);
                 element = element.offsetParent;
             }
             this.mouseCanvasPos[0] = event.pageX - totalOffsetLeft;
@@ -1322,4 +1322,5 @@ class Input extends Component {
     }
 }
 
-export {Input};
+export { Input };
+
