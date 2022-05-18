@@ -1,4 +1,4 @@
-import {utils} from "../../viewer/scene/utils.js";
+import { utils } from "../../viewer/scene/utils.js";
 
 /**
  * Default data access strategy for {@link XKTLoaderPlugin}.
@@ -32,7 +32,7 @@ class XKTDefaultDataSource {
      * @param {Function} ok Callback fired on success, argument is the ````.xkt```` file in an arraybuffer.
      * @param {Function} error Callback fired on error.
      */
-    getXKT(src, ok, error) {
+    getXKT(src, authHeader, ok, error) {
         var defaultCallback = () => {
         };
         ok = ok || defaultCallback;
@@ -59,6 +59,10 @@ class XKTDefaultDataSource {
         } else {
             const request = new XMLHttpRequest();
             request.open('GET', src, true);
+
+            if (authHeader)
+                request.setRequestHeader('Authorization', authHeader)
+
             request.responseType = 'arraybuffer';
             request.onreadystatechange = function () {
                 if (request.readyState === 4) {
@@ -75,4 +79,4 @@ class XKTDefaultDataSource {
 }
 
 
-export {XKTDefaultDataSource};
+export { XKTDefaultDataSource };

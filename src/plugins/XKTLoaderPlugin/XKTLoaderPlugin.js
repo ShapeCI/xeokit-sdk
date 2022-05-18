@@ -1,19 +1,19 @@
-import {utils} from "../../viewer/scene/utils.js"
-import {PerformanceModel} from "../../viewer/scene/models/PerformanceModel/PerformanceModel.js";
-import {Plugin} from "../../viewer/Plugin.js";
-import {XKTDefaultDataSource} from "./XKTDefaultDataSource.js";
-import {IFCObjectDefaults} from "../../viewer/metadata/IFCObjectDefaults.js";
+import { IFCObjectDefaults } from "../../viewer/metadata/IFCObjectDefaults.js";
+import { Plugin } from "../../viewer/Plugin.js";
+import { PerformanceModel } from "../../viewer/scene/models/PerformanceModel/PerformanceModel.js";
+import { utils } from "../../viewer/scene/utils.js";
+import { ParserV1 } from "./parsers/ParserV1.js";
+import { ParserV10 } from "./parsers/ParserV10.js";
+import { ParserV2 } from "./parsers/ParserV2.js";
+import { ParserV3 } from "./parsers/ParserV3.js";
+import { ParserV4 } from "./parsers/ParserV4.js";
+import { ParserV5 } from "./parsers/ParserV5.js";
+import { ParserV6 } from "./parsers/ParserV6.js";
+import { ParserV7 } from "./parsers/ParserV7.js";
+import { ParserV8 } from "./parsers/ParserV8.js";
+import { ParserV9 } from "./parsers/ParserV9.js";
+import { XKTDefaultDataSource } from "./XKTDefaultDataSource.js";
 
-import {ParserV1} from "./parsers/ParserV1.js";
-import {ParserV2} from "./parsers/ParserV2.js";
-import {ParserV3} from "./parsers/ParserV3.js";
-import {ParserV4} from "./parsers/ParserV4.js";
-import {ParserV5} from "./parsers/ParserV5.js";
-import {ParserV6} from "./parsers/ParserV6.js";
-import {ParserV7} from "./parsers/ParserV7.js";
-import {ParserV8} from "./parsers/ParserV8.js";
-import {ParserV9} from "./parsers/ParserV9.js";
-import {ParserV10} from "./parsers/ParserV10.js";
 
 const parsers = {};
 
@@ -791,7 +791,7 @@ class XKTLoaderPlugin extends Plugin {
 
         spinner.processes++;
 
-        this._dataSource.getXKT(params.src, (arrayBuffer) => {
+        this._dataSource.getXKT(params.src, params.authHeader, (arrayBuffer) => {
                 this._parseModel(arrayBuffer, params, options, performanceModel);
                 spinner.processes--;
             },
@@ -895,4 +895,5 @@ class XKTLoaderPlugin extends Plugin {
     }
 }
 
-export {XKTLoaderPlugin}
+export { XKTLoaderPlugin };
+
