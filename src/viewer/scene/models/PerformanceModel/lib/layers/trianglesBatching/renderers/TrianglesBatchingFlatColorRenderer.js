@@ -5,7 +5,6 @@ import { Program } from "../../../../../../webgl/Program.js";
 
 const tempVec4 = math.vec4();
 const tempVec3a = math.vec3();
-var first = true;
 
 /**
  * @private
@@ -118,7 +117,7 @@ class TrianglesBatchingFlatColorRenderer {
             gl.stencilOp(
                 gl.KEEP,     // what to do if the stencil test fails
                 gl.KEEP,     // what to do if the depth test fails
-                gl.INCR,  // what to do if both tests pass
+                gl.INCR,     // what to do if both tests pass
             );
             gl.drawElements(gl.TRIANGLES, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
 
@@ -132,14 +131,14 @@ class TrianglesBatchingFlatColorRenderer {
             gl.stencilOp(
                 gl.KEEP,     // what to do if the stencil test fails
                 gl.KEEP,     // what to do if the depth test fails
-                gl.DECR,  // what to do if both tests pass
+                gl.DECR,     // what to do if both tests pass
             );
             gl.drawElements(gl.TRIANGLES, state.indicesBuf.numItems, state.indicesBuf.itemType, 0);
             gl.disable(gl.CULL_FACE);
 
             ////////     THIRD PASS     ////////////////////
 
-            // draw the full screen rectangle, but only fragments where stencil buffer is positive
+            // draw the full screen rectangle, but only fragments where stencil buffer is 1
             gl.stencilOp(
                 gl.KEEP,
                 gl.KEEP,
@@ -151,32 +150,14 @@ class TrianglesBatchingFlatColorRenderer {
                 0xFF,         // mask
             );
 
-            // this._bindCapsProgram();
-            // if (first) {
-            //     first = false;
-            //     console.log("VAO handle: ");
-            //     console.log(this._rectVAO);
-            //     console.log(gl.getContextAttributes());
-            // }
-
-            // gl.bindVertexArray(this._rectVAO);
-            // gl.bindBuffer(gl.ARRAY_BUFFER, this._rectPositionBuffer);
-            // // populate the VBO
-            // const vertices = [
-            //     -1.0,  1.0, -1.0,   // z=-1.0 is the near plane, I guess?
-            //     -1.0, -1.0, -1.0,
-            //      1.0, -1.0, -1.0,
-            //      1.0, -1.0, -1.0,
-            //      1.0,  1.0, -1.0,
-            //     -1.0,  1.0, -1.0
-            // ];
-
-            // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-            // gl.vertexAttribPointer(this._aRectPosition.location, 3, gl.FLOAT, false, 0, 0);  
-            // gl.drawArrays(gl.TRIANGLES, 0, 6);
+            // bind program and fill buffers
+            this._bindCapsProgram();
+            // draw the screenspace rectangle
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
             
             //  CLEANUP
             gl.disable(gl.STENCIL_TEST);
+            this._bindProgram(frameCtx);
         }
         else {
             // no cross-section planes so just do a single pass.
@@ -265,13 +246,11 @@ class TrianglesBatchingFlatColorRenderer {
 
         /////////////    CLIPPING CAPS   //////////////////
         this._rectProgram = new Program(gl, this._buildCapsShader());
-
         if (this._rectProgram.errors) {
             this.errors = this._rectProgram.errors;
             return;
         }
 
-        this._uRectColor = this._rectProgram.getLocation("color");
         this._aRectPosition = this._rectProgram.getAttribute("position");
         gl.enableVertexAttribArray(this._aRectPosition.location);
 
@@ -295,16 +274,7 @@ class TrianglesBatchingFlatColorRenderer {
         ];
 
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-        gl.vertexAttribPointer(this._aRectPosition.location, 3, gl.FLOAT, false, 0, 0);        
-
-    }
-
-    _bindCapsProgram() {
-        const gl = this._scene.canvas.gl;
-
-        this._rectProgram.bind();
-        // setting all caps to a constant red.
-        gl.uniform4fv(this._uRectColor, [1.0, 0.0, 0.0, 0.8]);
+        gl.vertexAttribPointer(this._aRectPosition.location, 3, gl.FLOAT, false, 0, 0);  
     }
 
     _bindProgram(frameCtx) {
@@ -362,6 +332,26 @@ class TrianglesBatchingFlatColorRenderer {
         }
     }
 
+    _bindCapsProgram() {
+        const gl = this._scene.canvas.gl;
+        this._rectProgram.bind();
+
+        gl.bindVertexArray(this._rectVAO);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this._rectPositionBuffer);
+        // populate the VBO
+        const vertices = [
+            -1.0,  1.0, -1.0,   // z=-1.0 is the near plane, I guess?
+            -1.0, -1.0, -1.0,
+             1.0, -1.0, -1.0,
+             1.0, -1.0, -1.0,
+             1.0,  1.0, -1.0,
+            -1.0,  1.0, -1.0
+        ];
+
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
+        gl.vertexAttribPointer(this._aRectPosition.location, 3, gl.FLOAT, false, 0, 0);  
+    }
+
     _buildCapsShader() {
         return {
             vertex: this._buildCapsVertexShader(),
@@ -373,8 +363,6 @@ class TrianglesBatchingFlatColorRenderer {
         const src = [];
         src.push("#version 300 es");
         src.push("// Triangles batching flat-shading draw vertex shader - Screen Space Rectangle for Clipping Caps");
-
-        src.push("uniform int renderPass;");
 
         src.push("in vec3 position;");
 
@@ -398,12 +386,14 @@ class TrianglesBatchingFlatColorRenderer {
         src.push("precision mediump int;");
         src.push("#endif");
 
-        src.push("uniform vec4 color;");
-
         src.push("out vec4 outColor;");
 
         src.push("void main(void) {");
-            src.push("outColor = color;");
+            src.push("float stripeWidth = 16.0;");
+            src.push("if (int(mod(gl_FragCoord.x / stripeWidth + gl_FragCoord.y / stripeWidth, 2.0)) == 0)");
+                src.push("outColor = vec4(1, 0, 0, 1);");
+            src.push("else");
+                src.push("outColor = vec4(0, 1, 0, 1);");
         src.push("}");
 
         return src;
